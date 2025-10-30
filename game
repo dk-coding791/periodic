@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Game Hafalan Tabel Periodik — Vertical (Gol. 1A–8A)</title>
+<meta name="description" content="Game flashcard / quiz / table / order test untuk menghafal golongan 1A–8A (unsur alami)"/>
+<style>
+  :root{
+    --bg:#f6fbff; --card:#fff; --accent:#0ea5e9; --accent2:#0369a1;
+    --muted:#6b7280; --success:#16a34a; --danger:#ef4444; --glass: rgba(255,255,255,0.7);
+    --radius:12px; --maxw:1100px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family:Inter,ui-sans-serif,system-ui,Roboto,"Helvetica Neue",Arial;
+    background:linear-gradient(180deg,#f8fdff 0%,#eef6fb 100%);
+    color:#07213a; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+    padding:20px;
+  }
+  .wrap{max-width:var(--maxw); margin:0 auto;}
+  header{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+  header h1{margin:0;font-size:18px;color:var(--accent2)}
+  .topbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .tabs{display:flex;gap:8px;margin:12px 0;flex-wrap:wrap}
+  .tab{background:var(--card);padding:8px 12px;border-radius:10px;border:1px solid #e6f0f8;cursor:pointer}
+  .tab.active{background:linear-gradient(180deg,var(--accent),var(--accent2)); color:white; box-shadow:0 8px 24px rgba(2,132,199,.12)}
+  .panel{background:var(--card);padding:14px;border-radius:14px;box-shadow:0 8px 24px rgba(2,6,23,.04)}
+  .cols{display:grid;grid-template-columns: 1fr;gap:14px}
+  @media(min-width:900px){ .cols{grid-template-columns: 360px 1fr} }
+
+  /* Flashcards */
+  .group-list{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+  .group-btn{padding:8px 10px;border-radius:8px;border:1px solid #dbeafe;background:#f8fdff;cursor:pointer}
+  .card-grid{display:grid;grid-template-columns: repeat(auto-fill,minmax(120px,1fr));gap:10px}
+  .fcard{background:linear-gradient(180deg,#fff,#f8fbff);height:120px;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 6px 18px rgba(2,6,23,.04);transition:transform .18s, box-shadow .18s}
+  .fcard:hover{transform:translateY(-6px);box-shadow:0 14px 36px rgba(2,6,23,.08)}
+  .symbol{font-weight:700;font-size:22px;color:var(--accent2)}
+  .name{font-size:12px;color:var(--muted);margin-top:6px}
+  .flipped{background:linear-gradient(180deg,#0ea5e9,#0369a1); color:white}
+
+  /* Quiz */
+  .q-card{padding:18px;border-radius:12px}
+  .q-symbol{font-size:42px;font-weight:700;color:var(--accent2);text-align:center}
+  .q-text{font-size:14px;text-align:center;color:var(--muted);margin-bottom:10px}
+  .choices{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .choice{padding:10px;border-radius:10px;background:#f8fdff;border:1px solid #e6f4ff;cursor:pointer;text-align:center}
+  .choice.correct{background:var(--success);color:white}
+  .choice.wrong{background:var(--danger);color:white}
+
+  /* Vertical table */
+  .v-table{display:flex;gap:8px;flex-wrap:wrap}
+  .col-card{background:#fff;border-radius:10px;padding:8px;min-width:120px;box-shadow:0 6px 18px rgba(2,6,23,.04)}
+  .col-title{font-weight:700;color:var(--accent2);font-size:14px;margin-bottom:6px}
+  .elem{padding:8px;border-radius:8px;background:#f8fbff;margin-bottom:6px;text-align:center;cursor:pointer}
+  .elem.selected{outline:3px solid rgba(14,165,233,.18)}
+  .prompt{margin:10px 0;padding:10px;border-radius:8px;background:#f1f9ff;border-left:4px solid var(--accent);color:var(--accent2)}
+
+  /* Order test */
+  .order-list{display:flex;flex-direction:column;gap:8px}
+  .order-row{display:flex;gap:8px;align-items:center}
+  .order-row input{flex:1;padding:8px;border-radius:8px;border:1px solid #e6eef7}
+
+  /* common */
+  .row{display:flex;gap:8px;align-items:center}
+  .btn{padding:8px 12px;border-radius:8px;border:0;background:var(--accent);color:white;cursor:pointer}
+  .btn.ghost{background:white;border:1px solid #e6f4ff;color:var(--accent2)}
+  .muted{color:var(--muted);font-size:13px}
+  .progress{height:10px;background:#e6f4ff;border-radius:999px;overflow:hidden}
+  .progress > i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%}
+  footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Game Hafalan — Tabel Periodik (Gol. 1A–8A)</h1>
+      <div class="muted">Mode: Flashcards · Quiz · Table Game · Order Test — data unsur alami</div>
+    </div>
+  </header>
+
+  <div class="tabs" id="tabs">
+    <div class="tab active" data-tab="flash">Flashcards</div>
+    <div class="tab" data-tab="quiz">Quiz Pilihan Ganda</div>
+    <div class="tab" data-tab="table">Interactive Vertical Table</div>
+    <div class="tab" data-tab="order">Order Test (urut vertikal)</div>
+  </div>
+
+  <div class="cols">
+    <div>
+      <div class="panel" id="leftPanel">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div><strong>Pilih Golongan</strong><div class="muted" style="font-size:12px">Tampilkan unsur per golongan</div></div>
+          <div id="scoreBox" class="muted">Skor: <span id="globalScore">0</span></div>
+        </div>
+
+        <div class="group-list" id="groupList"></div>
+
+        <hr style="border:none;height:1px;background:#eef6fb;margin:12px 0">
+
+        <div style="margin-bottom:8px"><strong>Petunjuk singkat</strong></div>
+        <ul style="margin:0 0 10px 18px;color:var(--muted);font-size:13px">
+          <li>Flashcards: klik kartu untuk membalik dan lihat nama.</li>
+          <li>Quiz: pilih golongan jawaban (4 opsi).</li>
+          <li>Table: klik elemen yang diminta (cek skor & progres).</li>
+          <li>Order: isi urutan vertikal tiap golongan, lalu cek.</li>
+        </ul>
+
+        <div style="display:flex;gap:8px">
+          <button class="btn" id="resetAll">Reset Skor</button>
+          <button class="btn ghost" id="shuffleAll">Acak Soal Quiz</button>
+        </div>
+      </div>
+
+      <div style="margin-top:12px" class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><strong>Progres sesi</strong><div class="muted" style="font-size:12px">Progress per mode</div></div>
+          <div id="modeInfo" class="muted">Mode: Flashcards</div>
+        </div>
+        <div style="margin-top:8px" class="progress"><i id="progressBar" style="width:0%"></i></div>
+      </div>
+    </div>
+
+    <div>
+      <!-- FLASH -->
+      <div class="panel" id="flashPanel">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div><strong>Flashcards — lihat simbol, klik untuk balik</strong></div>
+          <div class="muted">Klik kartu untuk melihat nama lengkap</div>
+        </div>
+        <div id="flashCards" class="card-grid"></div>
+      </div>
+
+      <!-- QUIZ -->
+      <div class="panel" id="quizPanel" style="display:none">
+        <div class="q-card">
+          <div class="q-symbol" id="qSymbol">H</div>
+          <div class="q-text" id="qPrompt">Unsur ini termasuk golongan …</div>
+          <div class="choices" id="qChoices"></div>
+          <div style="display:flex;justify-content:space-between;margin-top:12px;align-items:center">
+            <div class="muted">Soal <span id="qIndex">1</span> / <span id="qTotal">20</span></div>
+            <div>
+              <button class="btn ghost" id="skipQ">Lewati</button>
+              <button class="btn" id="nextQ" style="display:none">Selanjutnya</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABLE -->
+      <div class="panel" id="tablePanel" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div><strong>Interactive Vertical Table — klik sesuai prompt</strong></div>
+          <div class="muted">Klik kolom / unsur untuk memilih</div>
+        </div>
+        <div class="prompt" id="tablePrompt">Klik "Mulai Table Game" untuk memulai.</div>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <button class="btn" id="startTable">Mulai Table Game</button>
+          <button class="btn ghost" id="stopTable">Berhenti</button>
+          <div class="muted" style="align-self:center">Skor: <span id="tableScore">0</span></div>
+        </div>
+        <div id="vTable" class="v-table" style="margin-top:8px"></div>
+      </div>
+
+      <!-- ORDER -->
+      <div class="panel" id="orderPanel" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div><strong>Order Test — isi urutan vertikal (simbol)</strong></div>
+          <div class="muted">Cek urutan dari atas ke bawah</div>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+          <select id="orderGroupSelect"></select>
+          <button class="btn" id="startOrder">Buat Soal</button>
+          <button class="btn ghost" id="checkOrder">Cek Jawaban</button>
+          <button class="btn ghost" id="clearOrder">Reset</button>
+        </div>
+        <div id="orderArea" class="order-list"></div>
+        <div style="margin-top:12px" class="muted">Hasil benar: <span id="orderCorrect">0</span> / <span id="orderTotal">0</span></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>Made for learning • Data: Golongan IA–VIIIA (unsur alami) • Responsive</footer>
+</div>
+
+<script>
+/* ---------- DATA: groups IA..VIIIA with elements in vertical order ---------- */
+const GROUPS = {
+  "1A": [{s:"H", n:"Hidrogen"},{s:"Li", n:"Litium"},{s:"Na", n:"Natrium"},{s:"K", n:"Kalium"},{s:"Rb", n:"Rubidium"},{s:"Cs", n:"Sesium"},{s:"Fr", n:"Fransium"}],
+  "2A": [{s:"Be", n:"Berilium"},{s:"Mg", n:"Magnesium"},{s:"Ca", n:"Kalsium"},{s:"Sr", n:"Stronsium"},{s:"Ba", n:"Barium"},{s:"Ra", n:"Radium"}],
+  "3A": [{s:"B", n:"Boron"},{s:"Al", n:"Aluminium"},{s:"Ga", n:"Galium"},{s:"In", n:"Indium"},{s:"Tl", n:"Talium"}],
+  "4A": [{s:"C", n:"Karbon"},{s:"Si", n:"Silikon"},{s:"Ge", n:"Germanium"},{s:"Sn", n:"Timah"},{s:"Pb", n:"Timbal"}],
+  "5A": [{s:"N", n:"Nitrogen"},{s:"P", n:"Fosfor"},{s:"As", n:"Arsen"},{s:"Sb", n:"Antimon"},{s:"Bi", n:"Bismut"}],
+  "6A": [{s:"O", n:"Oksigen"},{s:"S", n:"Belerang"},{s:"Se", n:"Selenium"},{s:"Te", n:"Telurium"},{s:"Po", n:"Polonium"}],
+  "7A": [{s:"F", n:"Fluorin"},{s:"Cl", n:"Klorin"},{s:"Br", n:"Bromin"},{s:"I", n:"Iodin"},{s:"At", n:"Astatin"}],
+  "8A": [{s:"He", n:"Helium"},{s:"Ne", n:"Neon"},{s:"Ar", n:"Argon"},{s:"Kr", n:"Kripton"},{s:"Xe", n:"Xenon"},{s:"Rn", n:"Radon"}]
+};
+
+/* ---------- State ---------- */
+let activeGroup = "1A";
+let globalScore = 0;
+
+/* ---------- Init UI references ---------- */
+const groupListEl = document.getElementById('groupList');
+const flashCardsEl = document.getElementById('flashCards');
+const tabs = document.querySelectorAll('.tab');
+const modeInfo = document.getElementById('modeInfo');
+const progressBar = document.getElementById('progressBar');
+const globalScoreEl = document.getElementById('globalScore');
+
+/* Quiz refs */
+const quizPanel = document.getElementById('quizPanel');
+const qSymbol = document.getElementById('qSymbol');
+const qPrompt = document.getElementById('qPrompt');
+const qChoices = document.getElementById('qChoices');
+const qIndex = document.getElementById('qIndex');
+const qTotal = document.getElementById('qTotal');
+const nextQBtn = document.getElementById('nextQ');
+const skipQBtn = document.getElementById('skipQ');
+
+/* Table refs */
+const tablePanel = document.getElementById('tablePanel');
+const vTable = document.getElementById('vTable');
+const tablePrompt = document.getElementById('tablePrompt');
+const startTableBtn = document.getElementById('startTable');
+const stopTableBtn = document.getElementById('stopTable');
+const tableScoreEl = document.getElementById('tableScore');
+
+/* Order refs */
+const orderSelect = document.getElementById('orderGroupSelect');
+const orderArea = document.getElementById('orderArea');
+const startOrderBtn = document.getElementById('startOrder');
+const checkOrderBtn = document.getElementById('checkOrder');
+const clearOrderBtn = document.getElementById('clearOrder');
+const orderCorrectEl = document.getElementById('orderCorrect');
+const orderTotalEl = document.getElementById('orderTotal');
+
+/* panels */
+const flashPanel = document.getElementById('flashPanel');
+const orderPanel = document.getElementById('orderPanel');
+const tableGamePanel = document.getElementById('tablePanel');
+
+/* ---------- Helpers ---------- */
+function setActiveTab(name){
+  tabs.forEach(t=>t.classList.toggle('active', t.dataset.tab === name));
+  flashPanel.style.display = name==='flash' ? '' : 'none';
+  quizPanel.style.display = name==='quiz' ? '' : 'none';
+  tableGamePanel.style.display = name==='table' ? '' : 'none';
+  orderPanel.style.display = name==='order' ? '' : 'none';
+  modeInfo.innerText = `Mode: ${name[0].toUpperCase()+name.slice(1)}`;
+  // reset progress
+  updateProgress(0);
+}
+function updateProgress(pct){ progressBar.style.width = `${pct}%`; }
+
+/* ---------- Render group buttons ---------- */
+function renderGroupButtons(){
+  groupListEl.innerHTML = '';
+  Object.keys(GROUPS).forEach(g=>{
+    const btn = document.createElement('button');
+    btn.className = 'group-btn';
+    btn.innerText = `${g} (${GROUPS[g].length})`;
+    btn.onclick = ()=>{ activeGroup = g; renderFlashcards(); renderOrderSelect(); renderVTable(); };
+    if(g===activeGroup) btn.style.background='#e6faff';
+    groupListEl.appendChild(btn);
+  });
+}
+
+/* ---------- FLASHCARDS ---------- */
+function renderFlashcards(){
+  // highlight active group button
+  [...groupListEl.children].forEach(b=> b.style.background = b.innerText.startsWith(activeGroup) ? '#e6faff' : '#fff');
+  flashCardsEl.innerHTML = '';
+  const arr = GROUPS[activeGroup];
+  arr.forEach((el, idx)=>{
+    const card = document.createElement('div');
+    card.className = 'fcard';
+    card.innerHTML = `<div class="symbol">${el.s}</div><div class="name">${el.n}</div>`;
+    card.onclick = ()=> {
+      card.classList.toggle('flipped');
+      // small animation text swap
+      if(card.classList.contains('flipped')){
+        card.querySelector('.symbol').innerText = el.n;
+        card.querySelector('.name').innerText = el.s;
+      } else {
+        card.querySelector('.symbol').innerText = el.s;
+        card.querySelector('.name').innerText = el.n;
+      }
+    };
+    flashCardsEl.appendChild(card);
+  });
+  updateProgress(10);
+}
+
+/* ---------- QUIZ (multiple choice) ---------- */
+let quizPool = [];
+let currentQ = 0;
+let qTotalCount = 20;
+let quizScore = 0;
+
+function buildQuizPool(){
+  quizPool = [];
+  // flatten elements with group
+  Object.keys(GROUPS).forEach(g=>{
+    GROUPS[g].forEach(el=>{
+      quizPool.push({group:g, symbol:el.s, name:el.n});
+    });
+  });
+  shuffleArray(quizPool);
+  quizPool = quizPool.slice(0, qTotalCount);
+  currentQ = 0; quizScore = 0;
+  qIndex.innerText = currentQ+1; qTotal.innerText = qTotalCount;
+  showQuestion();
+}
+
+function showQuestion(){
+  const q = quizPool[currentQ];
+  qSymbol.innerText = q.symbol;
+  qPrompt.innerText = `Unsur ${q.symbol} (${q.name}) termasuk golongan …`;
+  // create 4 choices (one correct + 3 random groups)
+  const groups = Object.keys(GROUPS);
+  const correct = q.group;
+  const choices = new Set([correct]);
+  while(choices.size < 4){
+    const r = groups[Math.floor(Math.random()*groups.length)];
+    choices.add(r);
+  }
+  const choicesArr = shuffleArray(Array.from(choices));
+  qChoices.innerHTML = '';
+  choicesArr.forEach(ch=>{
+    const b = document.createElement('div'); b.className='choice'; b.innerText = ch;
+    b.onclick = ()=>{ handleChoice(b, ch===correct); };
+    qChoices.appendChild(b);
+  });
+  nextQBtn.style.display = 'none';
+  updateProgress(Math.round((currentQ/qTotalCount)*100));
+  qIndex.innerText = currentQ+1;
+}
+
+function handleChoice(btnEl, isCorrect){
+  // mark choices
+  [...qChoices.children].forEach(c=> c.style.pointerEvents='none');
+  if(isCorrect){
+    btnEl.classList.add('correct');
+    quizScore++; globalScore++; updateGlobalScore();
+  } else {
+    btnEl.classList.add('wrong');
+    // highlight the correct one
+    [...qChoices.children].forEach(c=>{ if(c.innerText === quizPool[currentQ].group) c.classList.add('correct'); });
+  }
+  nextQBtn.style.display = '';
+}
+
+nextQBtn.addEventListener('click', ()=>{
+  currentQ++;
+  if(currentQ >= qTotalCount){
+    // end quiz
+    qPrompt.innerText = `Selesai! Skor: ${quizScore} / ${qTotalCount}`;
+    qChoices.innerHTML = `<div class="muted">Klik "Acak Soal Quiz" untuk mulai lagi.</div>`;
+    updateProgress(100);
+    nextQBtn.style.display = 'none';
+  } else {
+    showQuestion();
+  }
+});
+
+skipQBtn.addEventListener('click', ()=>{
+  // skip current question
+  currentQ++;
+  if(currentQ >= qTotalCount){ nextQBtn.click(); return; }
+  showQuestion();
+});
+
+/* ---------- Table Game (interactive vertical) ---------- */
+let tableRunning = false;
+let tableTarget = null;
+let tableScore = 0;
+
+function renderVTable(){
+  vTable.innerHTML = '';
+  // show columns in order 1A..8A
+  Object.keys(GROUPS).forEach(g=>{
+    const col = document.createElement('div'); col.className='col-card';
+    col.innerHTML = `<div class="col-title">${g}</div>`;
+    GROUPS[g].forEach((el, idx)=>{
+      const e = document.createElement('div'); e.className='elem'; e.innerText = el.s;
+      e.dataset.group = g; e.dataset.index = idx;
+      e.onclick = ()=> {
+        if(!tableRunning) { openModalSelectByIndex(g, idx); return; }
+        handleTableClick(e);
+      };
+      col.appendChild(e);
+    });
+    vTable.appendChild(col);
+  });
+}
+
+function startTableGame(){
+  tableRunning = true; tableScore = 0; tableScoreEl.innerText = tableScore;
+  nextTableTarget();
+  tablePrompt.innerText = 'Klik unsur yang diminta (simbol) di tabel.';
+}
+function stopTableGame(){
+  tableRunning = false; tablePrompt.innerText = 'Table game dihentikan.';
+  clearSelectionHighlights();
+}
+function nextTableTarget(){
+  // pick random element from all groups
+  const groups = Object.keys(GROUPS);
+  const g = groups[Math.floor(Math.random()*groups.length)];
+  const arr = GROUPS[g];
+  const idx = Math.floor(Math.random()*arr.length);
+  tableTarget = {group:g, idx, symbol: arr[idx].s};
+  tablePrompt.innerHTML = `Target: <strong>${tableTarget.symbol}</strong> — golongan ${tableTarget.group}`;
+  // clear previous highlights
+  clearSelectionHighlights();
+}
+
+function handleTableClick(elemEl){
+  const g = elemEl.dataset.group;
+  const idx = Number(elemEl.dataset.index);
+  if(!tableTarget) return;
+  if(g === tableTarget.group && idx === tableTarget.idx){
+    // correct
+    elemEl.classList.add('selected');
+    tableScore += 1; tableScoreEl.innerText = tableScore; globalScore++; updateGlobalScore();
+    // small success effect
+    tablePrompt.innerHTML = `<span style="color:var(--success);font-weight:700">Benar!</span> → ${tableTarget.symbol}. Mengacak target...`;
+    setTimeout(()=> nextTableTarget(), 600);
+  } else {
+    // wrong
+    elemEl.classList.add('selected');
+    tablePrompt.innerHTML = `<span style="color:var(--danger)">Salah</span> — itu ${elemEl.innerText} (gol. ${g}). Coba lagi.`;
+    setTimeout(()=> clearSelectionHighlights(), 700);
+  }
+}
+function clearSelectionHighlights(){ [...vTable.querySelectorAll('.elem')].forEach(e=> e.classList.remove('selected')); }
+
+/* ---------- ORDER TEST ---------- */
+function renderOrderSelect(){
+  orderSelect.innerHTML = '';
+  Object.keys(GROUPS).forEach(g=>{
+    const opt = document.createElement('option'); opt.value = g; opt.innerText = g;
+    orderSelect.appendChild(opt);
+  });
+}
+function makeOrderInputs(){
+  const g = orderSelect.value;
+  const arr = GROUPS[g];
+  orderArea.innerHTML = '';
+  arr.forEach((el, i)=>{
+    const row = document.createElement('div'); row.className='order-row';
+    row.innerHTML = `<div style="width:36px;text-align:center;font-weight:700">${i+1}.</div>
+                     <input placeholder="Simbol (contoh: H)" data-answer="${el.s}" />`;
+    orderArea.appendChild(row);
+  });
+  orderCorrectEl.innerText = '0';
+  orderTotalEl.innerText = `${arr.length}`;
+}
+function checkOrderAnswers(){
+  const inputs = [...orderArea.querySelectorAll('input')];
+  let correct = 0;
+  inputs.forEach(inp=>{
+    const ans = inp.dataset.answer.toLowerCase();
+    const val = (inp.value||'').trim().toLowerCase();
+    if(val === ans){ inp.style.borderColor = 'var(--success)'; correct++; }
+    else { inp.style.borderColor = 'var(--danger)'; }
+  });
+  orderCorrectEl.innerText = correct;
+  // reward points
+  globalScore += correct; updateGlobalScore();
+}
+
+/* ---------- Utilities ---------- */
+function shuffleArray(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]] } return a; }
+function updateGlobalScore(){ globalScoreEl.innerText = globalScore; }
+
+/* ---------- Event binding & init ---------- */
+document.querySelectorAll('.tab').forEach(t=> t.addEventListener('click', ()=> setActiveTab(t.dataset.tab)));
+
+// initial render
+renderGroupButtons();
+renderFlashcards();
+renderVTable();
+renderOrderSelect();
+
+/* quiz control */
+document.getElementById('shuffleAll').addEventListener('click', ()=> {
+  buildQuizPool();
+  setActiveTab('quiz');
+});
+document.getElementById('resetAll').addEventListener('click', ()=> {
+  globalScore = 0; updateGlobalScore(); tableScore = 0; tableScoreEl.innerText = tableScore;
+  alert('Skor telah direset.');
+});
+
+/* quiz init: default not auto-start until user clicks Acak Soal Quiz */
+qTotal.addEventListener('change', ()=>{ /* unused */ });
+
+/* table game buttons */
+startTableBtn.addEventListener('click', ()=> { startTableGame(); setActiveTab('table'); });
+stopTableBtn.addEventListener('click', ()=> stopTableGame());
+
+/* order test buttons */
+startOrderBtn.addEventListener('click', ()=> { makeOrderInputs(); setActiveTab('order'); });
+checkOrderBtn.addEventListener('click', ()=> checkOrderAnswers());
+clearOrderBtn.addEventListener('click', ()=> { orderArea.innerHTML=''; orderCorrectEl.innerText='0'; orderTotalEl.innerText='0'; });
+
+/* keyboard accessibility for quiz next */
+document.addEventListener('keydown', (e)=>{
+  if(e.key==='Enter' && document.querySelector('.tab.active').dataset.tab==='quiz'){
+    if(nextQBtn.style.display !== 'none') nextQBtn.click();
+  }
+});
+
+/* Provide ability to open modal select when clicking cards while not running (table mode) */
+function openModalSelectByIndex(g, idx){
+  // quick open table modal: set selected and show prompt
+  tablePrompt.innerHTML = `Pratinjau: ${GROUPS[g][idx].s} — ${GROUPS[g][idx].n} (gol. ${g})`;
+}
+
+/* Start quiz pool when user first opens quiz tab */
+document.querySelector('.tab[data-tab="quiz"]').addEventListener('click', ()=> {
+  buildQuizPool();
+});
+
+/* small: start with progress 0 and active flash tab */
+updateProgress(0);
+updateGlobalScore();
+
+/* ensure vtable and flashcards reflect activeGroup on load */
+renderFlashcards();
+renderVTable();
+renderOrderSelect();
+</script>
+</body>
+</html>
